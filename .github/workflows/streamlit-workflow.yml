@@ -1,0 +1,63 @@
+name: Streamlit Data Workbench Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  validate-streamlit-app:
+    name: Validate Streamlit app
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: streamlit_data_workbench
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check Python syntax
+        run: python -m compileall app.py repositories tabs
+
+      - name: Smoke test data repositories
+        run: |
+          python - <<'PY'
+          from app import build_repositories
+
+          repositories = build_repositories()
+
+          assert "Chinook SQLite Database" in repositories
+          assert "Teaching SQLite Database" in repositories
+          assert "Public CSV Dataset" in repositories
+
+          for source_label, repository in repositories.items():
+              sources = repository.list_sources()
+              assert sources, f"{source_label} should provide at least one source"
+
+              selected_source = sources[0]
+              preview = repository.preview_data(selected_source, limit=5)
+              columns = repository.get_columns(selected_source)
+              row_count = repository.get_row_count(selected_source)
+
+              assert not preview.empty, f"{source_label} preview should not be empty"
+              assert columns, f"{source_label} should provide columns"
+              assert row_count > 0, f"{source_label} should contain rows"
+
+          print("All data repositories loaded successfully.")
+          PY
