@@ -7,6 +7,12 @@ This workflow is based on the professor's class documents:
 
 The workflow uses command line Git, GitHub branches, pull requests, review, merge, and GitHub Actions. The goal is to keep the `main` branch stable while practicing a professional collaboration process.
 
+## Workflow Summary
+
+```text
+authenticate -> pull main -> create branch -> edit and test -> commit -> push -> pull request -> review -> merge
+```
+
 ## Workflow Steps
 
 1. Make sure GitHub access is configured.
